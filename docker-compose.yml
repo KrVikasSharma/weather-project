@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:17
+    container_name: weather-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: weatherdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - weather-net
+
+  backend:
+    build: ./backend
+    container_name: weather-backend
+    restart: always
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+    networks:
+      - weather-net
+
+  frontend:
+    build: ./frontend
+    container_name: weather-frontend
+    restart: always
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    ports:
+      - "80:80"   # Serve frontend via Nginx on port 80
+    networks:
+      - weather-net
+
+volumes:
+  pgdata:
+
+networks:
+  weather-net:
+    driver: bridge
