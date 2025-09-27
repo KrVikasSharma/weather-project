@@ -3,35 +3,28 @@ version: "3.9"
 services:
   db:
     image: postgres:17
-    container_name: weather-db
     restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: weatherdb
+    env_file:
+      - ./db.env   # <-- move DB creds into a separate env file
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
       - weather-net
 
   backend:
-    build: ./backend
-    container_name: weather-backend
+    image: <aws_account_id>.dkr.ecr.<region>.amazonaws.com/weather-backend:latest
     restart: always
     env_file:
       - ./backend/.env
     depends_on:
       - db
-    expose:
-      - "4000"
+    ports:
+      - "4000:4000"   # so ECS/EC2 can expose it
     networks:
       - weather-net
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: weather-frontend
+    image: <aws_account_id>.dkr.ecr.<region>.amazonaws.com/weather-frontend:latest
     restart: always
     depends_on:
       - backend
